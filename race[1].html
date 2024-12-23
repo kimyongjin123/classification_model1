@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이숍이야기</title>
+    <style>
+        #gameContainer{overflow:hidden;width:99vw;height:99vh;background-color:lightblue}
+        .charactor{width:calc((7vw + 7vh) / 2);height:calc((7vw + 7vh) / 2);position:absolute;z-index: 10;}
+        #race_stage{position: relative;top:7vh}
+        #chicken{transform: scaleX(-1);}
+        #load_stage{position:absolute;width:100vw;height:60vh}
+        *{margin:0;padding:0;font-size:calc((1.5vw + 1.5vh) / 2)}
+        button{padding:5px}
+        
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <h1 style="text-align: center;font-size:1.5rem"> 경주 게임 월드에 오신것을 환영합니다. <span id="keydisplay"></span> </h1>
+        <label>게임머니 <input name="money" type="number" id="mymoney"></label>
+        <button id="confirm_money">머니확정</button>
+        <div style="clear:both;margin-bottom: 2vh;"></div>
+        <div id="myinfo" style="float:left;width:20vw">
+            현재 보유 머니 ￦ <span id="info_money">0</span> 원
+            <p id="loss_money"></p>
+        </div>
+        <div style="float:left;margin-left:2vw">
+            <button id="startGame">게임스타팅</button> &nbsp;&nbsp;&nbsp;<button id="restartGame">재시작 설정</button>
+        </div>
+        <p id="game_result" style="height:5vh;float:right;margin-right:10vw"></p>
+        <div id="race_stage" style="clear:both;width:99vw;height:90vh;overflow-x: hidden;">
+            <div id="load_stage" style="background-image: url('');">
+                <img class="charactor" src="" id="rabbit" />
+                <img class="charactor" src="" id="tuttle" />
+                <img class="charactor" src="" id="chicken" />
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+<script>
+    tuttle_img_id = "1_dOb29iZ8IqdGY1Si8Zgq_75s9iBNrlk"
+    rabbit_img_id = "1V7RNGluG89IxAU9oiR2tSJMRpDZUAnih"
+    hen_img_id = "18JxpNStneFXOzeGcSLPfOMb_gNIfhykM"
+    tree_img_id = "1XdP3k2zSxhfS0bXjY0lWebuTDSbwoL3H"
+    load_img_id = "1Z1RXp3f8uZh3Ul-gReuerfaZJsZOtJ8Q"
+    tuttle_url = `https://drive.google.com/thumbnail?id=${tuttle_img_id}&sz=w${200}`
+    rabbit_url = `https://drive.google.com/thumbnail?id=${rabbit_img_id}&sz=w${200}`
+    hen_url = `https://drive.google.com/thumbnail?id=${hen_img_id}&sz=w${200}`
+    load_url = `https://drive.google.com/thumbnail?id=${load_img_id}&sz=w${500}`
+    tree_url = `https://drive.google.com/thumbnail?id=${tree_img_id}&sz=w${400}`
+    let race_fix_money=100
+    let first_sc =  race_fix_money*2
+    let second_sc = race_fix_money
+    let third_sc = race_fix_money*-2
+    let selcharactor="";
+    let confirm_money=document.getElementById("confirm_money")
+    let mymoney=0
+    let info_money=document.getElementById("info_money")
+    let loss_money=document.getElementById("loss_money")
+    confirm_money.addEventListener("click",()=>{
+        mymoney = parseInt(document.getElementById("mymoney").value);
+        info_money.innerText=mymoney;
+    })
+    
+    let load_stage = document.getElementById("load_stage")
+    load_stage.style.backgroundImage = `url('${load_url}')`;
+    let restart_game = document.getElementById("restartGame")
+    restart_game.disabled=true;
+    restart_game.addEventListener("click",restartGame)
+    let tree_txt =""
+    
+    for(let i=0;i<40;i++){
+        let r = parseInt(Math.random()*50+10)
+        let sign = Math.random()>0.5?1:-1
+        let front = Math.random()>0.8?1:0
+        r*=sign
+        let gap = parseInt((window.innerWidth-200)/15)
+        tree_txt += `<img src='${tree_url}' style='z-index:${front?20:1};width:${100+r}px;height:${200+r}px;position:absolute;left:${2.5*i}vw;top:${-7+parseInt(r/10)}vh'>`
+    }
+    load_stage.innerHTML+=tree_txt
+    for(let i=0;i<40;i++){
+        let r = parseInt(Math.random()*50+10)
+        let sign = Math.random()>0.5?1:-1
+        let front = Math.random()>0.8?1:0
+        r*=sign
+        let gap = parseInt((window.innerWidth-200)/15)
+        tree_txt += `<img src='${tree_url}' style='z-index:${front?20:1};width:${100+r}px;height:${200+r}px;position:absolute;left:${3*i}vw;top:${45+parseInt(r/10)}vh'>`
+    }
+    
+    load_stage.innerHTML+=tree_txt
+    let startGame = document.getElementById("startGame")
+    startGame.addEventListener("click",running);
+    let rabbit = document.getElementById("rabbit")
+    rabbit.style.left="0px"
+    rabbit.style.top="5vh"
+    rabbit.style.zIndex=100
+    rabbit.addEventListener("click",function(){
+        selcharactor="토끼"
+        removeBorder()
+        this.style.border="3px solid white"
+    })
+    rabbit.src = rabbit_url;
+    let tuttle  = document.getElementById("tuttle")
+    tuttle.style.left="0px"
+    tuttle.style.top="20vh"
+    tuttle.style.zIndex=100
+    tuttle.addEventListener("click",function(){
+        selcharactor="거북이"
+        removeBorder()
+        this.style.border="3px solid white"
+    })
+    tuttle.src = tuttle_url;
+    let chicken  = document.getElementById("chicken")
+    chicken.addEventListener("click",function(){
+        selcharactor="닭"
+        removeBorder()
+        this.style.border="3px solid white"
+    })
+    chicken.style.left="0px"
+    chicken.style.top="40vh"
+    chicken.style.zIndex=100
+    chicken.src = hen_url
+    let score = []
+    function running(event){
+        document.addEventListener("keypress",function(event){
+            let keydisplay = document.getElementById("keydisplay")
+            if(event.keyCode==32){
+                keydisplay.innerText= "스페이스바"
+            }
+            if(event.keyCode==13){
+                keydisplay.innerText= "엔터"
+            }
+        })
+        if(mymoney<race_fix_money*2){
+            alert(`머니 잔액(${mymoney})이 손실 최소액(${race_fix_money*2})보다 
+            작아서 게임 시작할 수 없습니다. 관리자에게 돈을 빌리세요`)
+            return;
+        }
+        if(!selcharactor){
+            alert("케릭터를 먼저 선택하세요")
+            return;
+        }
+        chicken.style.zIndex=3
+        rabbit.style.zIndex=3
+        tuttle.style.zIndex=3
+        this.disabled=true;
+        mymoney-=race_fix_money
+        info_money.innerText=mymoney;
+        let resultPoint = window.innerWidth-chicken.width-3
+        let distent=4
+        let rabbit_count=0
+        let tuttle_count=0
+        let chicken_count=0//20
+        let rabbit_pid = setInterval(()=>{//토끼
+            let rdis = parseInt(Math.random()*5)
+            if(!rabbit_count){
+                let rest = Math.random()
+                if(rest>0.98)rabbit_count=1
+            }            
+            if(rabbit_count>0&&rabbit_count<=20){
+                rabbit_count+=1
+                if(rabbit_count%8<4){
+                    rabbit.style.top=(parseInt(rabbit.style.top)+2)+"vh"
+                }else{
+                    rabbit.style.top=(parseInt(rabbit.style.top)-2)+"vh"
+                }                
+            }else{
+                rabbit_count=0
+                rabbit.style.left=(parseInt(rabbit.style.left)+distent+rdis)+"px"
+            }            
+            if( parseInt(rabbit.style.left)>resultPoint){
+                score.push("토끼");
+                if(score.length>=3){gameEnd()}
+                clearInterval(rabbit_pid)
+            }            
+        },50)
+        let tuttle_pid = setInterval(()=>{//토끼
+            let rdis = parseInt(Math.random()*5)
+            if(!tuttle_count){
+                let rest = Math.random()
+                if(rest>0.98)tuttle_count=1
+            }            
+            if(tuttle_count>0&&tuttle_count<=20){
+                tuttle_count+=1
+                if(tuttle_count%8<4){
+                    tuttle.style.top=(parseInt(tuttle.style.top)+2)+"vh"
+                }else{
+                    tuttle.style.top=(parseInt(tuttle.style.top)-2)+"vh"
+                }                
+            }else{
+                tuttle_count=0
+                tuttle.style.left=(parseInt(tuttle.style.left)+distent+rdis)+"px"
+            }            
+            if( parseInt(tuttle.style.left)>resultPoint){
+                score.push("거북이");
+                if(score.length>=3){gameEnd()}
+                clearInterval(tuttle_pid)
+            }            
+        },50)
+        let chicken_pid = setInterval(()=>{//토끼
+            let rdis = parseInt(Math.random()*5)
+            if(!chicken_count){
+                let rest = Math.random()
+                if(rest>0.98)chicken_count=1
+            }            
+            if(chicken_count>0&&chicken_count<=20){
+                chicken_count+=1
+                if(chicken_count%8<4){
+                    chicken.style.top=(parseInt(chicken.style.top)+2)+"vh"
+                }else{
+                    chicken.style.top=(parseInt(chicken.style.top)-2)+"vh"
+                }                
+            }else{
+                chicken_count=0
+                chicken.style.left=(parseInt(chicken.style.left)+distent+rdis)+"px"
+            }            
+            if( parseInt(chicken.style.left)>resultPoint){
+                score.push("닭");
+                if(score.length>=3){gameEnd()}
+                clearInterval(chicken_pid)
+            }            
+        },50)
+        // 달리기 중간에 랜덤하게 재충전 휴식을 만들어 보겠습니다.
+    }
+    function gameEnd(){
+       let game_result=document.getElementById("game_result")
+       game_result.innerText=`게임이 종료되었습니다.
+       1 등 ${score[0]}
+       2 등 ${score[1]}
+       3 등 ${score[2]}`
+       calcMoney()
+       restart_game.disabled=false;
+    }
+    function restartGame(){
+        document.getElementById("startGame").disabled=false;
+        let chars = document.getElementsByClassName("charactor")
+        for(ch of chars){
+            ch.style.left="0px"
+        }
+        let game_result=document.getElementById("game_result")
+        game_result.innerText=""
+        score=[]
+        chicken.style.zIndex=100
+        rabbit.style.zIndex=100
+        tuttle.style.zIndex=100
+    }
+    function removeBorder(){
+        let chars = document.getElementsByClassName("charactor")
+        for(ch of chars){
+            ch.style.border="0px"
+        }
+    }
+    function calcMoney(){
+        let score_ix = score.indexOf(selcharactor)
+        switch(score_ix){
+            case 0:mymoney+=first_sc;break;
+            case 1:mymoney+=second_sc;break;
+            case 2:mymoney+=third_sc;break;
+        }
+        info_money.innerText=mymoney;
+    }
+</script>
